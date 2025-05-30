@@ -33,7 +33,6 @@ controls.enableDamping = true
 const ambientLight = new THREE.AmbientLight(0x222222)
 scene.add(ambientLight)
 
-
 const flash = new THREE.PointLight(0xffffff, 3, 50)
 flash.position.set(0, 10, 0)
 flash.visible = false
@@ -58,26 +57,12 @@ window.addEventListener('resize', () => {
     composer.setSize(sizes.width, sizes.height)
 })
 
-//Lightning
+// Lightning with Fractal Branching
 function createLightning() {
     const group = new THREE.Group()
-    const mainPath = generatePath(10)
-
-    const mainLine = makeLine(mainPath)
-    group.add(mainLine)
-
-    // branches
-    for (let i = 2; i < mainPath.length - 2; i += 2) {
-        if (Math.random() < 0.5) {
-            const branch = generatePath(5, mainPath[i])
-            const branchLine = makeLine(branch)
-            group.add(branchLine)
-        }
-    }
-
+    generateFractalLightning(group, new THREE.Vector3(0, 10, 0), 11, 5)
     scene.add(group)
 
-    
     setTimeout(() => {
         group.children.forEach(child => {
             if (child.geometry) child.geometry.dispose()
@@ -92,6 +77,21 @@ function createLightning() {
         })
         scene.remove(group)
     }, 800)
+}
+
+function generateFractalLightning(group, start, segments, depth) {
+    if (depth === 0) return
+
+    const path = generatePath(segments, start)
+    const mainLine = makeLine(path)
+    group.add(mainLine)
+
+    for (let i = 2; i < path.length - 2; i += 2) {
+        if (Math.random() < 0.6) {
+            const branchStart = path[i].clone()
+            generateFractalLightning(group, branchStart, Math.floor(segments * 0.5), depth - 1)
+        }
+    }
 }
 
 function generatePath(segments, start = new THREE.Vector3(0, 10, 0)) {
@@ -150,4 +150,4 @@ const tick = () => {
     requestAnimationFrame(tick)
 }
 
-tick() 
+tick()
